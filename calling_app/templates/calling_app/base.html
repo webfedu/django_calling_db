@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Мій сайт{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'calling_app/css/style-dark.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+        <h1>Мій Сайт</h1>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}">Головна</a></li>
+            <li><a href="{% url 'companies' %}">Список компаній</a></li>
+            <li><a href="{% url 'create_company' %}">Компанія+</a></li>
+            <li><a href="{% url 'create_contact' %}">Контакт+</a></li>
+            <!-- <li><a href="#">Склад+</a></li>
+            <li><a href="#">Дзвінок+</a></li>
+            <li><a href="#">Інше</a></li>
+            <li><a href="#">Довідка</a></li> -->
+                {% if user.is_authenticated %}
+            <li>Привіт, {{ user.username }}!</li>
+            <li><a href="{% url 'logout' %}" class="btn btn-outline-danger">Вийти</a></li>
+                {% else %}
+            <li><a href="{% url 'login' %}" class="btn btn-outline-primary">Увійти</a></li>
+                {% endif %}
+        </ul>
+    </nav>
+  </header>
+
+  <div class="content">
+    <aside class="left">
+        {% block left %}
+        <p>Ліва колонка</p>
+        {% endblock %}
+    </aside>
+
+    <main>
+        {% block content %}
+        <p>Основна частина</p>
+        {% endblock %}
+    </main>
+
+    <aside class="right">
+        {% block right %}
+        <p>Права колонка</p>
+        {% endblock %}
+    </aside>
+  </div>
+
+  <footer>
+    <p>Футер</p>
+  </footer>
+</body>
+</html>

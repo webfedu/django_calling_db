@@ -1,0 +1,104 @@
+{% extends "calling_app/base.html" %}
+
+{% block title %}Контакт{% endblock %}
+
+{% block content %}
+
+{% include "calling_app/blocks/back_to_company.html" with company=company %}
+
+<h2>{% if co_form.full_name.value %}Редагування контактної особи {% else %} Додати контактну особу {% endif %}</h2> 
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<!-- Форма для редагування даних особи -->
+<form method="post" style="margin-bottom: 2rem;">
+    {% csrf_token %}
+    {{ co_form.as_p }}
+    {% if co_form.full_name.value %}
+        <button type="submit" name="save_contact" class="btn btn-primary">Зберегти</button>
+        <button type="submit" name="dell_contact_from_company" class="btn btn-primary">Видалити з компнії</button>
+    {% else %}
+        <button type="submit" name="save_contact" class="btn btn-primary">Зберегти</button>
+    {% endif %}
+
+
+
+<hr>
+{% if co_form.full_name.value %}
+<!-- Форма для редагування телефонів -->
+
+    <h3>Телефони</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Номер телефону</th>
+            <th>Статус</th>
+            <th>Дія</th>
+            <th>Контакт</th>
+            <th>Компанія</th>
+            <th>До телефону</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for form in ph_forms %}
+        <tr>
+            <td>{{ form.number }}</td>
+            <td>{{ form.status }}</td>
+            
+            <td>
+                <button type="submit"
+                        name="update_phone_{{ forloop.counter0 }}"
+                        class="btn btn-accent">
+                    Оновити
+                </button>
+                <button type="submit"
+                        name="dell_phone_from_contact_{{ forloop.counter0 }}"
+                        class="btn btn-accent">
+                    Видалити з
+                </button>
+            </td>
+
+            <td>
+                <input type="checkbox" 
+                       name="contact_{{ forloop.counter0 }}" 
+                       checked>
+            </td>
+            <td>
+                <input type="checkbox" 
+                       name="company_{{ forloop.counter0 }}" 
+                       >
+            </td>
+            <td>
+                {% for phone in phones %}
+                    {% if forloop.parentloop.counter == forloop.counter %}
+                        {% if phone.number %} 
+                            <a href="{% url 'edit_phone' company.edrpou phone.id %}"> 
+                                {{ phone.number }} </a>
+                            {% endif %}
+                        
+                    {% endif %}
+                {% endfor %}
+            </td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include "calling_app/blocks/links_companies.html" with contact_companies=contact_companies %}
+
+{% endif %}
+</form>
+
+
+{% endblock %}
+
+{% block right %}
+    {% include "calling_app/blocks/right_block.html" with phone=phone calls=calls count_calls=count_calls %}
+{% endblock %}

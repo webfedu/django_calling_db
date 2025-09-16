@@ -1,0 +1,143 @@
+{% extends "calling_app/base.html" %}
+{% block title %}Список компаній{% endblock %}
+
+{% block content %}
+{% if add_company_to_holding %}
+  <h3>Додати компанію до холдингу {{ holding.name }}</h3>
+  <form method="post">
+    {% csrf_token %}
+    <select name="selected_company">
+      {% for company in companies %}
+        <option value="{{ company.edrpou }}" {% if selected_edrpou == company.edrpou %}selected{% endif %}>
+          {{ company.name }} ({{ company.edrpou }}) - {{ company.hectares }}га
+        </option>
+      {% endfor %}
+    </select>
+    <button type="submit">Додати</button>
+  </form>
+  {% if msg %}
+    <p>{{ msg }}</p>
+  {% endif %}
+{% endif %}
+
+<table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+        <tr>
+            {% for col in columns %}
+                {% if sort == col.field %}
+                    {% if direction == "asc" %}
+                        <th><a href="?sort={{ col.field }}&direction=desc&{{ sort_querystring }}">{{ col.label }} ▲</a></th>
+                    {% else %}
+                        <th><a href="?sort={{ col.field }}&direction=asc&{{ sort_querystring }}">{{ col.label }} ▼</a></th>
+                    {% endif %}
+                {% else %}
+                    <th><a href="?sort={{ col.field }}&direction=asc&{{ sort_querystring }}">{{ col.label }}</a></th>
+                {% endif %}
+            {% endfor %}
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for company in companies %}
+            <tr>
+                <td>{{ company.edrpou }}</td>
+                <td><a href="{% url 'company_page' company.edrpou %}">{{ company.name }}</a></td>
+                <td>{{ company.legal_address }}</td>
+                <td>{{ company.hectares }}</td>
+                <td>
+                    {% if company.next_call %}
+                        {{ company.next_call|date:"d.m.Y H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    {% if company.last_call %}
+                    <a href="?show_calls={{ company.edrpou }}&{{ show_calls_querystring }}">
+                        {{ company.last_call|truncatechars:50 }}
+                    </a>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6">Немає компаній</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block left %}
+<form method="get" style="margin-top:15px;">
+    <label for="per_page">Кількість на сторінку:</label>
+    <input type="number" id="per_page" name="per_page" value="{{ per_page }}" min="1" style="width:60px;"><br><br>
+
+    <label for="search">Фільтр:</label>
+    <input type="text" id="search" name="search" value="{{ search }}"><br><br>
+
+    <label>Кількість гектарів:</label><br>
+    <input type="number" name="hectares_val" value="{{ hectares_val }}" step="0.01"><br>
+    <select name="hectares_op">
+        <option value="">==</option>
+        <option value="<" {% if hectares_op == "<" %}selected{% endif %}>&lt;</option>
+        <option value=">" {% if hectares_op == ">" %}selected{% endif %}>&gt;</option>
+        <option value="<=" {% if hectares_op == "<=" %}selected{% endif %}>&lt;=</option>
+        <option value=">=" {% if hectares_op == ">=" %}selected{% endif %}>&gt;=</option>
+    </select><br><br>
+
+    <!-- Зберігаємо сортування при сабміті форми -->
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <input type="hidden" name="direction" value="{{ direction }}">
+
+    <button type="submit">Фільтрувати</button>
+</form>
+
+<p>Всього знайдено: {{ total_count }} компанії(й)</p>
+
+<!-- Пагінація -->
+<div class="pagination">
+    {% if companies.has_previous %}
+        <a href="?page=1&{{ page_querystring }}">Перша</a>
+        <a href="?page={{ companies.previous_page_number }}&{{ page_querystring }}">Попередня</a>
+    {% endif %}
+
+    <span>Сторінка {{ companies.number }} з {{ companies.paginator.num_pages }}</span>
+
+    {% if companies.has_next %}
+        <a href="?page={{ companies.next_page_number }}&{{ page_querystring }}">Наступна</a>
+        <a href="?page={{ companies.paginator.num_pages }}&{{ page_querystring }}">Остання</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block right %}
+<div id="right-block">
+    {% if selected_company %}
+        <h3>Дзвінки компанії {{ selected_company.name }}</h3>
+        <table border="1" cellpadding="4" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Дзвінки</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for call in calls %}
+                <tr>
+                    <td>{{ call.notes|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">Дзвінків немає</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+
+
+
+{% endblock %}

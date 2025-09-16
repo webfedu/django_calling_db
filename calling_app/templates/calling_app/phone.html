@@ -1,0 +1,42 @@
+{% extends "calling_app/base.html" %}
+
+{% block title %}Телефон{% endblock %}
+
+{% block content %}
+  {% include "calling_app/blocks/back_to_company.html" with company=company %}
+  <h2>{% if ph_form.number.value %}Робота по телефону {% else %} Додати номер телефону {% endif %}</h2>
+  
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <!-- Форма телефону -->
+  <form method="post" style="margin-bottom: 2rem;">
+      {% csrf_token %}
+      {{ ph_form.as_p }}
+      
+      {% if ph_form.number.value %}
+        {{ co_form.as_p }}
+      {% endif %}
+
+      {% if ph_form.number.value %}
+          <button type="submit" name="save_phone" class="btn btn-primary">Зберегти</button>
+          <button type="submit" name="dell_phone_from_company" class="btn btn-primary">Видалити з компнії</button>
+      {% else %}
+          <button type="submit" name="save_phone" class="btn btn-primary">Зберегти</button>
+      {% endif %}
+
+  </form>
+
+{% include "calling_app/blocks/links_companies.html" with contact_companies=related_companies %}
+
+
+{% endblock %}
+
+{% block right %}
+    {% include "calling_app/blocks/right_block.html" with phone=phone calls=calls count_calls=count_calls %}
+{% endblock %}

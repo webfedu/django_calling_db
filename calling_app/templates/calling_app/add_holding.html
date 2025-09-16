@@ -1,0 +1,38 @@
+{% extends "calling_app/base.html" %}
+
+{% block title %}Додати до холдингу{% endblock %}
+
+{% block content %}
+
+{% include "calling_app/blocks/back_to_company.html" with company=company %}
+
+<h2>Холдинг компанії
+</h2> 
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<!-- Форма для редагування даних холдингу -->
+<form method="post" style="margin-bottom: 2rem;">
+    {% csrf_token %}
+    {{ co_form.as_p }}
+    <button type="submit" name="save_contact" class="btn btn-primary">Зберегти</button>
+    {% if co_form.name.value %}
+      <button type="submit" name="add_company_to_holding" class="btn btn-primary">Додати ще компанію до холдингу</button>
+      <button type="submit" name="dell_company" class="btn btn-primary">Вивести компанію з холдингу</button>
+    {% endif %}
+</form>
+<p>Гектари холдингу: {{holding_hectares}} га</p>
+<p>Компанії холдингу:</p>
+
+{% include "calling_app/blocks/links_companies.html" with contact_companies=companies %}
+
+{% endblock %}
+
+{% block right %}
+    {% include "calling_app/blocks/right_block.html" with holdings_ha=holdings_ha %}
+{% endblock %}

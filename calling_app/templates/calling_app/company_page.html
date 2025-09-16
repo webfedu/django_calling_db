@@ -1,0 +1,217 @@
+{% extends "calling_app/base.html" %}
+
+{% block title %}Сторінка компанії{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="links-row">
+    <div class="link-left">
+        {% if next_plan %}
+            <a href="{% url 'edit_plan_call' next_plan.id %}">
+                {{ next_plan.planned_datetime|date:"d.m.Y H:i" }} - {{ next_plan.notes }}
+            </a>
+        {% endif %}
+    </div>
+    <div class="link-right">
+        <a href="{% url 'show_all_company_links' company.edrpou %}">Всі зв'язки</a>
+    </div>
+</div>
+
+
+
+<form method="post">
+    {% csrf_token %}
+        <h1 class="company-header hover-block
+            {% if company.status.status_name == 'nonactive' %} company-nonactive {% endif %}">
+            
+            <span class="company-edrpou">{{ company.edrpou }}</span>
+            
+            <span class="company-name">
+                <a href="{% url 'update_company' company.edrpou %}">{{ company.name }}</a>
+            </span>
+            
+            <span class="company-hectares">{{ company.hectares }} га</span>
+
+            {% if company.status.status_name == 'nonactive' %}
+                <span class="company-status">ПРИПИНЕНО!!!</span>
+            {% endif %}
+        </h1>
+
+        
+
+        <div class="holding-block hover-block">
+            <div class="company-info">
+                <div>
+                    <strong>Область:</strong> {{ company.region }} &nbsp; | &nbsp;
+                    <strong>Район:</strong> {{ company.district.district }}
+                </div>
+                <div>
+                    <strong>Адреса:</strong> {{ company.legal_address }}
+                </div>
+            </div>
+            {% if holding %}
+                <span class="holding-name">
+                    <a href="{% url 'edit_holding' company.edrpou holding.id %}">{{ holding.name }}</a>
+                </span>
+                <span class="holding-hectares">{{ holding_hectares }} га</span>
+            {% else %}
+                <span class="no-holding">Холдинг не призначений</span>
+                <button type="submit" name="add_holding" class="btn btn-primary">Додати до холдингу</button>
+            {% endif %}
+        </div>
+
+    <div class="contacts-block hover-block">
+        <div class="contacts-header">
+           <a href="{% url 'add_contact' company.edrpou %}" class="btn btn-primary btn-uppercase">
+                Контакти<sup>+</sup>
+            </a>
+            та
+            <a href="{% url 'add_phone' company.edrpou %}" class="btn btn-primary btn-uppercase">
+                Телефони<sup>+</sup>
+            </a>
+        </div>
+
+    {% for contact, phone_items in contact_phones.items %}
+<div class="contact-row">
+    <!-- Ліва колонка -->
+    <div class="contact-info">
+        <a href="{% url edit_contact_url company.edrpou contact.id %}">
+            <strong>{{ contact.full_name }}</strong>
+            {% if contact.position %}<br><span>{{ contact.position }}</span>{% endif %}
+        </a>
+    </div>
+
+    <!-- Права колонка -->
+    <div class="contact-details">
+        <div class="contact-phones">
+            <ul>
+                {% for item in phone_items %}
+                {% with phone=item.phone call=item.last_call count=item.count_calls %}
+                <li>
+                    <!-- Номер + кнопка -->
+                    <div class="phone-main">
+                        <a href="{% url 'edit_phone' company.edrpou phone.id %}">{{ phone.number }}</a>
+                        <a href="{% url 'add_call' company.edrpou phone.id %}">
+                            {% if phone.status == "on" %} 
+                                <span class="bi bi-telephone-fill" style="color: rgb(6, 235, 6); font-size: 12px;"></span>
+                            {% else %}
+                                <span class="bi bi-telephone-fill" style="color: rgb(196, 5, 5); font-size: 12px;"></span>
+                            {% endif %}
+                            Набрати
+                        </a>
+                            - {{ count }}
+                    </div>
+
+                    <!-- Результат дзвінка -->
+                    <div class="call-info">
+                        {% if call %}
+                            {{ call.datetime|date:"d.m.Y H:i" }} —
+                            <span title="{{ call.notes }}">{{ call.notes|truncatechars:200 }}</span>
+                        {% else %}
+                            (дзвінків немає)
+                        {% endif %}
+                    </div>
+                </li>
+                {% endwith %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+
+
+
+    <!-- Інші телефони -->
+    <div class="contact-row">
+        <div class="contact-info">
+            <a href="{% url edit_contact_url company.edrpou 1 %}">Інші телефони</a>
+        </div>
+        <div class="contact-phones">
+            <ul>
+                {% for item in phones_without_contact %}
+                {% with phone=item.phone call=item.last_call %}
+                <li>
+                    <a href="{% url 'edit_phone' company.edrpou phone.id %}">{{ phone.number }}</a>
+                    {% if call %}
+                    {{ call.datetime|date:"d.m.Y H:i" }}:
+                        <span title="{{ call.notes }}">{{ call.notes|truncatechars:200 }}</span>
+                    {% else %}
+                        — (дзвінків немає)
+                    {% endif %}
+                </li>
+                {% endwith %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="plans-block hover-block">
+<h2>Електронна пошта</h2>
+    <ul>
+        {% for email in emails %}
+            <li>{{ email }}</li>
+        {% empty %}
+            <li>Пошти немає</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="plans-block hover-block">
+    <div class="plans-header">
+        <h2><a href="{% url 'plan_call_company' company.edrpou %}" class="btn btn-primary btn-uppercase">Плановані дзвінки <sup>+</sup></a></h2>
+    </div>
+
+    <ul class="plans-list">
+        {% for plan in planned_calls %}
+            {% if plan.status == "on" %}
+                <li>
+                    <a href="{% url 'edit_plan_call' plan.id %}">
+                        <span>{{ plan.planned_datetime|date:"d.m.Y H:i" }}</span>
+                        <span>{{ plan.notes|default:"(без нотаток)" }}</span>
+                    </a>
+                </li>
+            {% endif %}
+        {% empty %}
+            <li>(Планів немає)</li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+
+{% block calls_list %}
+    {% include "calling_app/blocks/calls_list.html" with company=company calls=calls count_calls=count_calls %}
+{% endblock %}
+
+
+    <h2>Склади</h2>
+    <ul>
+        {% for wh in warehouses %}
+            <li>{{ wh.capacity_tons }} т ({{ wh.get_transport_type_display }})</li>
+        {% empty %}
+            <li>Складів немає</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Залишки</h2>
+        <ul>
+        {% for item in stock_items %}
+            <li>{{ item.crop.name }} - {{ item.quantity }} т</li>
+        {% empty %}
+            <li>Залишків немає</li>
+        {% endfor %}
+    </ul>
+</form>
+{% endblock %}
+
+
+
+{% block right %}
+    {% include "calling_app/blocks/right_block.html" with company=company calls=calls plan=plan%}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "calling_app/base.html" %}
+{% load static %}
+
+{% block title %}Увійти{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calling_app/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="hover-block login-center">
+    <h2>Увійти</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="id_username" class="form-label">Логін</label>
+            <input type="text" name="username" autofocus required id="id_username">
+        </div>
+
+        <div class="mb-3">
+            <label for="id_password" class="form-label">Пароль</label>
+            <input type="password" name="password" required id="id_password">
+        </div>
+
+        {% if form.errors %}
+            <div class="alert">
+                Невірний логін або пароль.
+            </div>
+        {% endif %}
+
+        <button type="submit">Увійти</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "calling_app/base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Оновлення компанії{% else %}Створення компанії{% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% include "calling_app/blocks/back_to_company.html" with company=company %}
+
+<div class="hover-block compact-form">
+    {% if form.instance.pk %}
+        <h2>Оновлення компанії</h2>
+    {% else %}
+        <h2>Створення компанії</h2>
+    {% endif %}
+
+    <form method="post" class="company-form">
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                {{ form.edrpou.label_tag }}  <!-- ЄДРПОУ -->
+                {{ form.edrpou }}
+            </div>
+
+            <div class="form-group">
+                {{ form.name.label_tag }}  <!-- Назва компанії -->
+                {{ form.name }}
+            </div>
+
+            <div class="form-group">
+                {{ form.status.label_tag }}  <!-- Статус компанії -->
+                {{ form.status }}
+            </div>
+
+            <div class="form-group">
+                {{ form.legal_address.label_tag }}  <!-- Юридична адреса -->
+                {{ form.legal_address }}
+            </div>
+
+            <div class="form-group">
+                {{ form.region.label_tag }}  <!-- Область -->
+                {{ form.region }}
+            </div>
+
+            <div class="form-group">
+                {{ form.district.label_tag }}  <!-- Район -->
+                {{ form.district }}
+            </div>
+
+            <div class="form-group">
+                {{ form.hectares.label_tag }}  <!-- Площа (га) -->
+                {{ form.hectares }}
+            </div>
+
+        </div>
+
+        <ul id="region-list" class="autocomplete-list"></ul>
+        <ul id="district-list" class="autocomplete-list"></ul>
+
+        <div class="form-buttons">
+            {% if form.instance.pk %}
+                <button type="submit" class="btn btn-primary">Оновити компанію</button>
+            {% else %}
+                <button type="submit" class="btn btn-success">Створити компанію</button>
+            {% endif %}
+
+            {% if form.duplicate_found %}
+                <span class="text-warning">{{ form.edrpou.errors }}</span>
+                <button type="submit"
+                        class="btn btn-warning"
+                        formaction="{% url 'update_company' edrpou=form.data.edrpou %}"
+                        formmethod="get"
+                        formtarget="_blank">
+                    Оновити існуючу компанію
+                </button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% endblock %}

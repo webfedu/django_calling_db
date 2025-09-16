@@ -1,0 +1,69 @@
+<div id="right-block">
+
+    {% if for_phone or for_company or for_contact %}
+        <!-- Заголовки -->
+        {% if for_phone %}
+        <div class="hover-block section-header right-block">
+            Дзвінки по телефону <strong>{{ phone.number }}</strong>
+        </div>
+        {% endif %}
+
+        {% if for_company %}
+        <div class="hover-block section-header right-block">
+            Дзвінки компанії <strong>{{ company.name }}</strong>
+        </div>
+        {% endif %}
+
+        {% if for_contact %}
+        <div class="hover-block section-header right-block">
+            Дзвінки контакту <strong>{{ contact.full_name }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="hover-block section-header right-block">
+            Всього дзвінків: <strong>{{ count_calls }}</strong>
+        </div>
+
+        <!-- Дзвінки -->
+        {% for call in calls %}
+            <div class="call-row hover-block">
+                <div class="call-content">
+                    <div class="call-header">
+                        {% if call.phone %}
+                            <span class="call-number">{{ call.phone.number }}</span>
+                        {% else %}
+                            <span class="call-number">Без номера</span>
+                        {% endif %}
+                        <span class="call-date">{{ call.datetime|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <hr class="call-separator">
+                    <div class="call-notes">
+                        <a href="{% url 'edit_call' call.id %}">
+                            {{ call.notes|default:"(немає нотаток)" }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="call-row hover-block">Дзвінків немає</div>
+        {% endfor %}
+
+
+    {% endif %}
+
+    {% if for_holding %}
+    <div class="hover-block section-header right-block">
+        Усі холдинги
+    </div>
+
+    <div class="holdings-block">
+        {% for name, hectares in holdings_ha.items %}
+        <div class="holding-row hover-block right-block">
+            <div class="holding-name">{{ name }}</div>
+            <div class="holding-hectares">{{ hectares }} га</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>

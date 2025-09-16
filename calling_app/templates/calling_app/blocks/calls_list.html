@@ -1,0 +1,29 @@
+<div class="calls-block hover-block">
+        <div class="calls-header">
+            <a href="{% url 'calls_of_company' company.edrpou %}">Дзвінки: </a>{{ count_calls }}
+        </div>
+
+        <ul class="calls-list">
+            {% for call in calls %}
+            <li class="call-row">
+                <!-- Ліва колонка: номер + дата -->
+                <div class="call-meta">
+                    {% if call.phone %}
+                        {{ call.phone.number }}
+                    {% else %}
+                        Без номера
+                    {% endif %}
+                    <br>
+                    <span class="call-date">{{ call.datetime|date:"d.m.Y H:i" }} ({{ call.duration_seconds }} сек)</span>
+                </div>
+
+                <!-- Права колонка: нотатки -->
+                <div class="call-notes">
+                    <a href="{% url 'edit_call' call.id %}">{{ call.notes|default:"(немає нотаток)" }}</a>
+                </div>
+            </li>
+            {% empty %}
+            <li class="call-row">Дзвінків немає</li>
+            {% endfor %}
+        </ul>
+    </div>

@@ -1,0 +1,19 @@
+ <h3>Пов'язані компанії:</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ЄДРПОУ</th>
+            <th>Назва</th>
+            <th>Площа, га</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for comp in contact_companies %}
+        <tr>
+            <td>{{ comp.edrpou }}</td>
+            <td><a href="{% url 'company_page' comp.edrpou %}">{{ comp.name }}</a></td>
+            <td>{{ comp.hectares }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

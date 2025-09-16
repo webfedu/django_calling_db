@@ -1,0 +1,38 @@
+{% extends "calling_app/base.html" %}
+
+{% block title %}Додати компанію{% endblock %}
+
+{% block content %}
+<h2>Редагувати або додати нову компанію</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% for field in form %}
+    <br>
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+            </div>
+    {% endfor %}
+
+    <!-- Кнопка Зберегти або Підтвердити заміну -->
+    <br>
+    <span>{{ error }}</span>
+
+    {% if message %}
+        <p style="color: red;">{{ message }}</p>
+        <button type="submit" name="update">Так</button>
+        <button type="submit" name="cancel">Ні</button>
+        <button type="submit" name="lookat">Переглянути</button>
+    {% else %}
+        <!-- Кнопка Зберегти або Підтвердити заміну -->
+        <br>
+        <button type="submit" class="btn btn-success">
+            {% if company_exists %}Підтвердити заміну{% else %}Зберегти{% endif %}
+        </button>
+    <br>
+    {% endif %}
+
+</form>
+{% endblock %}

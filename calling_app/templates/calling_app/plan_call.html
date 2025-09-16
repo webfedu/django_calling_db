@@ -1,0 +1,48 @@
+{% extends "calling_app/base.html" %}
+
+{% block title %}Планування {% endblock %}
+
+{% block content %}
+{% if company %}
+<a href="{% url 'company_page' company.edrpou %}"> &lt;&lt;&lt; до компанії {{ company.name }}</a>
+{% else %} 
+    <h2>План не буде прикріплено до жодної компанії</h2>
+{% endif %}
+{% if phone.contact %}
+    <h2>Планування наступної дії щодо {{ phone.contact.full_name }} {% if phone.contact.position %}, {{phone.contact.position}} {% endif %}</h2>
+{% else %} 
+    <h2>План не буде прикріплено до жодної особи</h2>
+{% endif %}
+{% if phone.number %}
+    <h2>{{ phone.number }}</h2>
+{% else %} 
+    <h2>План не буде прикріплено до жодного телефону!!!</h2>
+{% endif %}
+
+
+
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<!-- Форма для редагування даних особи -->
+<form method="post" style="margin-bottom: 2rem;">
+    {% csrf_token %}
+    {{ form.as_p }}
+        <button type="submit" name="save_call" class="btn btn-primary">Зберегти</button>
+
+
+{% include "calling_app/blocks/links_companies.html" with contact_companies=related_companies %}
+
+</form>
+
+
+{% endblock %}
+
+{% block right %}
+    {% include "calling_app/blocks/right_block.html" with phone=phone %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% for c in companies %}
+  <div class="contact-row">
+      <div class="contact-info">
+          <a href="{% url 'company_page' c.edrpou %}"><strong>{{ c.name }}</strong></a><br>
+          <span>EDRPOU: {{ c.edrpou }}</span><br>
+          <span>{{ c.hectares }} га</span>
+      </div>
+      <div class="contact-details">
+          <span class="company-address">{{ c.address }}</span>
+      </div>
+  </div>
+{% endfor %}

@@ -1,0 +1,42 @@
+{% extends "calling_app/base.html" %}
+
+{% block title %}Усі дзвінки компанії{% endblock %}
+
+
+
+{% block content %}
+
+{% include "calling_app/blocks/back_to_company.html" with company=company %}
+
+<h2><a href="{% url 'edit_plan_call' next_plan.id %}">
+        {{next_plan.planned_datetime|date:"d.m.Y H:i" }} - {{next_plan.notes}}
+    </a>
+</h2>
+<h1>Усі дзвінки компанії</h1>
+<form method="post">
+    {% csrf_token %}
+        <h1 class="company-header hover-block
+            {% if company.status.status_name == 'nonactive' %} company-nonactive {% endif %}">
+            
+            <span class="company-edrpou">{{ company.edrpou }}</span>
+            
+            <span class="company-name">
+                <a href="{% url 'update_company' company.edrpou %}">{{ company.name }}</a>
+            </span>
+            
+            <span class="company-hectares">{{ company.hectares }} га</span>
+
+            {% if company.status.status_name == 'nonactive' %}
+                <span class="company-status">ПРИПИНЕНО!!!</span>
+            {% endif %}
+        </h1>
+
+
+{% block calls_list %}
+    {% include "calling_app/blocks/calls_list.html" with company=company calls=calls count_calls=count_calls %}
+{% endblock %}
+
+{% block right %}
+    {% include "calling_app/blocks/right_block.html" with company=company calls=calls plan=plan%}
+{% endblock %}
+{% endblock %}

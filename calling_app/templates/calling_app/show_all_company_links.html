@@ -1,0 +1,103 @@
+{% extends "calling_app/base.html" %}
+{% block title %}Зв'язки {{ company.name }}{% endblock %}
+
+{% block content %}
+
+{% include "calling_app/blocks/back_to_company.html" with company=company %}
+
+<h1 class="company-header hover-block">
+    <span class="company-edrpou">{{ company.edrpou }}</span>
+    <span class="company-name"><a href="{% url 'company_page' company.edrpou %}">{{ company.name }}</a></span>
+    
+    {% if company.hectares %}<span class="company-hectares">{{ company.hectares }} га</span>{% endif %}
+</h1>
+
+{% if all_related_companies %}
+<div class="contacts-block hover-block">
+    <div class="contacts-header">
+        <strong>Усі компанії</strong>
+    </div>
+    {% for item in all_related_companies %}
+    <div class="contact-row">
+        <div class="contact-info">
+            <a href="{% url 'company_page' item.company.edrpou %}"><strong>{{ item.company.name }}</strong></a><br>
+            <span>EDRPOU: {{ item.company.edrpou }}</span><br>
+            <span>{{ item.company.hectares }} га</span>
+        </div>
+        <div class="contact-details">
+            <span>Типи зв’язку: {{ item.types }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# ====== Холдинг ====== #}
+{% if holding_links %}
+<div class="contacts-block hover-block">
+    <div class="contacts-header">
+        <strong>Холдинг: {{ company.holding }}</strong>
+    </div>
+    
+    {% include "calling_app/blocks/companies_info_list_in_all_related.html" with companies=holding_links %}
+    
+</div>
+{% endif %}
+
+{# ====== Зв'язки за телефонами ====== #}
+{% if phone_links %}
+<div class="contacts-block hover-block">
+    <div class="contacts-header">
+        <strong>Зв'язки за телефонами</strong>
+    </div>
+    {% for ph in phone_links %}
+        <div class="contacts-header">
+            <strong>{{ ph.number }}</strong>
+        </div>
+        {% include "calling_app/blocks/companies_info_list_in_all_related.html" with companies=ph.companies %}
+   
+    {% endfor %}
+</div>
+{% endif %}
+
+{# ====== Зв'язки по ПІБ контактів ====== #}
+{% if contact_links %}
+<div class="contacts-block hover-block">
+    <div class="contacts-header">
+        <strong>Зв'язки по ПІБ контактів</strong>
+    </div>
+    {% for ct in contact_links %}
+    <div class="contacts-header">
+        <strong>{{ ct.full_name }}</strong>
+    </div>
+            {% include "calling_app/blocks/companies_info_list_in_all_related.html" with companies=ct.companies %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{# ====== Зв'язки по адресі ====== #}
+{% if address_links %}
+<div class="contacts-block hover-block">
+    <div class="contacts-header">
+        <strong>Зв'язки по адресі</strong>
+    </div>
+    {% include "calling_app/blocks/companies_info_list_in_all_related.html" with companies=address_links %}
+</div>
+{% endif %}
+
+{# ====== Зв'язки по email ====== #}
+{% if email_links %}
+<div class="contacts-block hover-block">
+    <div class="contacts-header">
+        <strong>Зв'язки по email</strong>
+    </div>
+    {% for em in email_links %}
+        <div class="contacts-header">
+            <strong>{{ em.email }}</strong>
+        </div>
+        {% include "calling_app/blocks/companies_info_list_in_all_related.html" with companies=em.companies %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,122 @@
+/* ========================= */
+/* Загальні стилі сторінки   */
+/* ========================= */
+html, body {
+  height: 100%; /* важливо для flex */
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column; /* хедер, контент, футер вертикально */
+  min-height: 100vh;      /* займає всю висоту вікна */
+}
+
+/* ========================= */
+/* Хедер                     */
+/* ========================= */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #4b6cb7, #182848); /* гарний градієнт */
+  padding: 15px 30px;
+  color: white;
+}
+
+/* Логотип */
+.logo h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+/* ========================= */
+/* Меню навігації            */
+/* ========================= */
+nav ul {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li {
+  margin-left: 20px; /* відстань між пунктами */
+}
+
+nav ul li:first-child {
+  margin-left: 0; /* перший пункт без відступу */
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.3s, color 0.3s;
+}
+
+nav ul li a:hover {
+  background-color: rgb(192, 186, 186);
+  color: #182848;
+}
+
+/* ========================= */
+/* Контейнер контенту        */
+/* ========================= */
+.content {
+  display: flex;
+  flex: 1; /* займає весь простір між хедером і футером */
+}
+
+/* Ліва колонка */
+.left {
+  background-color: #f4f4f4;
+  width: 15%;
+  padding: 20px;
+}
+
+/* Основна частина */
+main {
+  background-color: #fff;
+  flex: 1; /* займає все, що залишилось */
+  padding: 20px;
+}
+
+/* Права колонка */
+.right {
+  background-color: #f4f4f4;
+  width: 15%;
+  padding: 20px;
+}
+
+/* ========================= */
+/* Футер                     */
+/* ========================= */
+footer {
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+
+.autocomplete-list {
+  list-style: none;
+  padding: 0;
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  position: absolute;
+  background: white;
+  z-index: 1000;
+  width: 200px;
+}
+.autocomplete-item {
+  padding: 5px;
+  cursor: pointer;
+}
+.autocomplete-item:hover {
+  background-color: #eee;
+}
