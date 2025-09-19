@@ -7,11 +7,12 @@
 {% block content %}
 
 {% include "calling_app/blocks/back_to_company.html" with company=company %}
-
+{% if next_plan %}
 <h2><a href="{% url 'edit_plan_call' next_plan.id %}">
         {{next_plan.planned_datetime|date:"d.m.Y H:i" }} - {{next_plan.notes}}
     </a>
 </h2>
+{% endif %}
 <h1>Усі дзвінки компанії</h1>
 <form method="post">
     {% csrf_token %}
