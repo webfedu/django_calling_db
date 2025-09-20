@@ -36,24 +36,21 @@ class CompanyStatus(models.Model):
 
 class Company(models.Model):
     holding = models.ForeignKey(
-        Holding, on_delete=models.SET_NULL, null=True, blank=True, related_name="companies"
+        Holding, on_delete=models.SET_NULL, null=True, blank=True, related_name="companies", db_index=True
     )
     status = models.ForeignKey(
-        CompanyStatus, on_delete=models.SET_NULL, default=1, null=True, blank=True, related_name="companies"
+        CompanyStatus, on_delete=models.SET_NULL, default=1, null=True, blank=True, related_name="companies", db_index=True
     )
-    edrpou = models.CharField(max_length=8, unique=True)
-    name = models.CharField(max_length=255)
-    legal_address = models.TextField(blank=True, null=True)
-    hectares = models.IntegerField(blank=True, null=True)  # якщо потрібні дроби
+    edrpou = models.CharField(max_length=8, unique=True, db_index=True)   # Унікальний ключ — уже індексований
+    name = models.CharField(max_length=255, db_index=True)                # Дуже часто фільтрується
+    legal_address = models.TextField(blank=True, null=True)               # НЕ індексуй (TEXT неефективно)
+    hectares = models.IntegerField(blank=True, null=True, db_index=True)  # Фільтрація/сортування по площі
     region = models.ForeignKey(
-        Region, on_delete=models.SET_NULL, null=True, blank=True, related_name="companies"
+        Region, on_delete=models.SET_NULL, null=True, blank=True, related_name="companies", db_index=True
     )
     district = models.ForeignKey(
-        District, on_delete=models.SET_NULL, null=True, blank=True, related_name="companies"
+        District, on_delete=models.SET_NULL, null=True, blank=True, related_name="companies", db_index=True
     )
-
-    def __str__(self):
-        return f"{self.name} ({self.edrpou})"
 
 
 class CompanyEmail(models.Model):
