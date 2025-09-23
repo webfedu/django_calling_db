@@ -22,21 +22,33 @@ _company_context_columns = [
 _company_headers = [col["field"] for col in _company_context_columns]
 
 
+import time
+
 def get_filtered_sorted_companies_context(request):
-    qs = get_filtered_sorted_companies(
+    timers = {}
+
+    # 1️⃣ get_filtered_sorted_companies
+    start = time.time()
+    qs, qs_list = get_filtered_sorted_companies(
         _company_headers,
         search=request.GET.get("search", "").strip(),
+        fast_search = request.GET.get("fast_search"),
         hectares_val=request.GET.get("hectares_val"),
         hectares_op=request.GET.get("hectares_op"),
         sort=request.GET.get("sort", "edrpou"),
         direction=request.GET.get("direction", "asc"),
     )
+    timers['get_filtered_sorted_companies'] = time.time() - start
 
-    
 
-    paginator = Paginator(qs, int(request.GET.get("per_page", 20)))
+    # 3️⃣ Paginator
+    start = time.time()
+    paginator = Paginator(qs_list, int(request.GET.get("per_page", 20)))
     page_obj = paginator.get_page(request.GET.get("page"))
+    timers['Paginator.get_page'] = time.time() - start
 
+    # 4️⃣ Формування querystring
+    start = time.time()
     sort_params = request.GET.copy()
     sort_params.pop("sort", None)
     sort_params.pop("direction", None)
@@ -46,17 +58,25 @@ def get_filtered_sorted_companies_context(request):
     page_params.pop("page", None)
     page_querystring = page_params.urlencode()
 
-    # Копія GET-параметрів без show_calls
     show_calls_params = request.GET.copy()
     if "show_calls" in show_calls_params:
-        del show_calls_params["show_calls"]  # видаляє всі show_calls
+        del show_calls_params["show_calls"]
     show_calls_querystring = show_calls_params.urlencode()
+    timers['querystring_processing'] = time.time() - start
 
+    # 5️⃣ get_company_by_edrpou і get_company_calls_by_edrpou
+    start = time.time()
+    selected_company = get_company_by_edrpou(request.GET.get("show_calls"), qs)
+    calls = get_company_calls_by_edrpou(request.GET.get("show_calls"), qs)
+    timers['company_calls_lookup'] = time.time() - start
+
+    # 6️⃣ Формування контексту
+    start = time.time()
     context = {
         "companies": page_obj,
         "per_page": int(request.GET.get("per_page", 20)),
         "search": request.GET.get("search", "").strip(),
-        "total_count": qs.count(),
+        "total_count": len(qs_list),
         "hectares_op": request.GET.get("hectares_op"),
         "hectares_val": request.GET.get("hectares_val"),
         "sort": request.GET.get("sort", "edrpou"),
@@ -65,9 +85,16 @@ def get_filtered_sorted_companies_context(request):
         "page_querystring": page_querystring,
         "show_calls_querystring": show_calls_querystring,
         "columns": _company_context_columns,
-        "selected_company": get_company_by_edrpou(request.GET.get("show_calls")),
-        "calls": get_company_calls_by_edrpou(request.GET.get("show_calls")),
+        "selected_company": selected_company,
+        "calls": calls,
     }
+    timers['context_build'] = time.time() - start
+
+    # 7️⃣ Друк таймерів
+    print("=== Timers (seconds) ===")
+    for k, v in timers.items():
+        print(f"{k}: {v:.4f}")
+
     return context
 
 

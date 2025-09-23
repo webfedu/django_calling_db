@@ -7,7 +7,12 @@ from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpRequest
 from .models import Phone, Company, ContactPerson, Call, Holding
 from .forms import PhoneForm, ContactForm, HoldingForm
+from django.utils import timezone
+import datetime
 
+QsHash = None
+QsListHash = []
+SearchHash = {}
 
 
 def get_company_contact(edrpou: str, contact_pk: int) -> Tuple[Company, ContactPerson]:
@@ -34,6 +39,7 @@ def get_company_contact(edrpou: str, contact_pk: int) -> Tuple[Company, ContactP
 def get_filtered_sorted_companies(
     company_headers: List[str],
     search: str,
+    fast_search: bool,
     hectares_val: Optional[str],
     hectares_op: Optional[str],
     sort: str,
@@ -50,20 +56,53 @@ def get_filtered_sorted_companies(
     :param direction: напрямок сортування ('asc' або 'desc')
     :return: відфільтрований та відсортований QuerySet компаній
     """
+    global SearchHash
+    global QsHash
+    global QsListHash
 
-    qs: QuerySet[Company] = Company.objects.all()
-    qs = Company.objects.annotate(
-    last_call=Max("calls__datetime"),
-    next_call=Min("planned_calls__planned_datetime", 
-                  filter=Q(planned_calls__status="on")  # враховуємо тільки активні плани
-                    )
-    )
+    search_hash = {"search": search,
+                  "hectares_val": hectares_val, 
+                  "hectares_op": hectares_op,
+                  "fast_search": fast_search,
+                  }
+    print(search_hash)
+    print(SearchHash)
     
-    qs = search_in_queryset(qs, search) # --- Пошук ---
-    qs = _filter_by_hectares(qs, hectares_val, hectares_op) # --- Фільтр по гектарах ---
-    qs = _sort_queryset(qs, sort, direction, company_headers) # --- Сортування ---
+    if search_hash == SearchHash:
+        qs = QsHash
+        qs_list = QsListHash
+        qs_list.sort(key=lambda c: _sort_key(c, sort), reverse=(direction == "desc"))
+        print("QsHash")
 
-    return qs
+    else:
+        qs: QuerySet[Company] = Company.objects.all()
+        qs = Company.objects.annotate(
+            last_call=Max("calls__datetime"),
+            next_call=Min("planned_calls__planned_datetime", 
+                        filter=Q(planned_calls__status="on")  # враховуємо тільки активні плани
+                            )
+            )
+        if not fast_search:
+            qs = search_in_queryset(qs, search) # --- Пошук ---
+        else:
+            qs = quick_search_companies(search)
+        
+        qs = _filter_by_hectares(qs, hectares_val, hectares_op) # --- Фільтр по гектарах ---
+
+        
+
+        qs = _sort_queryset(qs, sort, direction, company_headers) # --- Сортування ---
+        
+        qs_list = list(qs)
+        SearchHash = search_hash
+    
+    QsHash = qs
+    QsListHash = qs_list
+
+    print("QsHash")
+    return qs, qs_list
+
+
 
 
 def get_or_create_contact_in_company(contact_form: ContactForm, company: str) -> Tuple[ContactPerson, str]:
@@ -339,6 +378,39 @@ def search_in_queryset(qs: QuerySet, search: str) -> QuerySet:
     return qs.filter(q).distinct()
 
 
+def quick_search_companies(search: Optional[str] = None) -> QuerySet[Company]:
+    """
+    Швидкий пошук компаній тільки по стовпцях моделі Company:
+    - edrpou
+    - name
+    - legal_address
+    - hectares (як текст)
+
+    :param search: рядок для пошуку
+    :return: QuerySet з компаніями
+    """
+    qs: QuerySet[Company] = Company.objects.all()
+
+    
+    if search:
+        qs = Company.objects.annotate(
+            last_call=Max("calls__datetime"),
+            next_call=Min("planned_calls__planned_datetime", 
+                        filter=Q(planned_calls__status="on")  # враховуємо тільки активні плани
+                            )
+            )
+        qs = qs.filter(
+            Q(edrpou__icontains=search) |
+            Q(name__icontains=search) |
+            Q(legal_address__icontains=search) |
+            Q(hectares__icontains=search)
+        )
+        
+
+    return qs
+
+
+
 def _get_fields_name_from_model(model: Type[Model]) -> set[str]:
 
     """ 
@@ -406,21 +478,29 @@ def _get_fields_name_from_model_m2m_reverse(model: Type[Model]) -> set[str]:
     return fields
 
 
-def get_company_by_edrpou(edrpou: str) -> Company | None:
+def get_company_by_edrpou(edrpou: str, qs: QuerySet[Company] | None = None) -> Company | None:
     """
     Повертає Company за edrpou або None, якщо компанія не знайдена.
+    Можна передати готовий QuerySet (наприклад, відфільтрований або кешований).
     """
     if not edrpou:
         return None
-    return Company.objects.filter(edrpou=edrpou).first()
 
+    if qs is None:
+        qs = Company.objects.all()
 
-def get_company_calls_by_edrpou(edrpou: str) -> QuerySet | None:
+    return qs.filter(edrpou=edrpou).first()
+
+def get_company_calls_by_edrpou(
+    edrpou: str,
+    company_qs: QuerySet[Company] | None = None
+) -> QuerySet[Call] | None:
     """
     Повертає QuerySet дзвінків для компанії з заданим edrpou.
+    Можна передати готовий QuerySet компаній.
     Якщо компанія не знайдена, повертає None.
     """
-    company = get_company_by_edrpou(edrpou)
+    company = get_company_by_edrpou(edrpou, qs=company_qs)
     if company is None:
         return None
     return Call.objects.filter(company=company).order_by('-datetime')
@@ -472,3 +552,16 @@ def _sort_queryset(qs: QuerySet, sort_field: str, direction: str = "asc", allowe
         order = sort_field if direction == "asc" else f"-{sort_field}"
         qs = qs.order_by(order)
     return qs
+
+
+def _sort_key(c, sort):
+    value = getattr(c, sort)
+
+    if sort in ["last_call"]:
+        return value or datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+    elif sort in ["next_call"]:
+        return value or datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
+    elif sort in ["hectares"]:
+        return value if value is not None else -1  # або 0, залежно від логіки
+    else:
+        return value

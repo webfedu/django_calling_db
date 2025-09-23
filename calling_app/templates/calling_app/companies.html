@@ -93,6 +93,7 @@
     <input type="hidden" name="direction" value="{{ direction }}">
 
     <button type="submit">Фільтрувати</button>
+   <input type="checkbox" name="fast_search" {% if request.GET.fast_search %}checked{% endif %}> Швидкий пошук
 </form>
 
 <p>Всього знайдено: {{ total_count }} компанії(й)</p>
