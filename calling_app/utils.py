@@ -40,8 +40,8 @@ def get_filtered_sorted_companies(
     company_headers: List[str],
     search: str,
     fast_search: bool,
-    hectares_val: Optional[str],
-    hectares_op: Optional[str],
+    hectares_max: Optional[str],
+    hectares_min: Optional[str],
     sort: str,
     direction: str,
 ) -> QuerySet[Company]:
@@ -61,8 +61,8 @@ def get_filtered_sorted_companies(
     global QsListHash
 
     search_hash = {"search": search,
-                  "hectares_val": hectares_val, 
-                  "hectares_op": hectares_op,
+                  "hectares_val": hectares_max, 
+                  "hectares_op": hectares_min,
                   "fast_search": fast_search,
                   }
     print(search_hash)
@@ -85,9 +85,9 @@ def get_filtered_sorted_companies(
         if not fast_search:
             qs = search_in_queryset(qs, search) # --- Пошук ---
         else:
-            qs = quick_search_companies(search)
+            qs = quick_search_companies(qs, search)
         
-        qs = _filter_by_hectares(qs, hectares_val, hectares_op) # --- Фільтр по гектарах ---
+        qs = _filter_by_hectares_range(qs, hectares_max, hectares_min) # --- Фільтр по гектарах ---
 
         
 
@@ -378,7 +378,7 @@ def search_in_queryset(qs: QuerySet, search: str) -> QuerySet:
     return qs.filter(q).distinct()
 
 
-def quick_search_companies(search: Optional[str] = None) -> QuerySet[Company]:
+def quick_search_companies(qs, search: Optional[str] = None) -> QuerySet[Company]:
     """
     Швидкий пошук компаній тільки по стовпцях моделі Company:
     - edrpou
@@ -389,22 +389,12 @@ def quick_search_companies(search: Optional[str] = None) -> QuerySet[Company]:
     :param search: рядок для пошуку
     :return: QuerySet з компаніями
     """
-    qs: QuerySet[Company] = Company.objects.all()
-
-    
-    if search:
-        qs = Company.objects.annotate(
-            last_call=Max("calls__datetime"),
-            next_call=Min("planned_calls__planned_datetime", 
-                        filter=Q(planned_calls__status="on")  # враховуємо тільки активні плани
-                            )
-            )
-        qs = qs.filter(
-            Q(edrpou__icontains=search) |
-            Q(name__icontains=search) |
-            Q(legal_address__icontains=search) |
-            Q(hectares__icontains=search)
-        )
+    qs = qs.filter(
+        Q(edrpou__icontains=search) |
+        Q(name__icontains=search) |
+        Q(legal_address__icontains=search) |
+        Q(hectares__icontains=search)
+    )
         
 
     return qs
@@ -535,6 +525,37 @@ def _filter_by_hectares(qs: QuerySet, hectares_val: str | int, hectares_op: str 
     return qs.filter(hectares=val)
 
 
+def _filter_by_hectares_range(
+    qs: QuerySet, hectares_min: str | int | None, hectares_max: str | int | None
+) -> QuerySet:
+    """
+    Фільтрує QuerySet компаній за діапазоном hectares включно.
+    
+    :param qs: QuerySet, який фільтруємо
+    :param hectares_min: мінімальне значення (рядок або int) або None
+    :param hectares_max: максимальне значення (рядок або int) або None
+    :return: відфільтрований QuerySet
+    """
+    filters = {}
+
+    try:
+        if hectares_min is not None and hectares_min != "":
+            filters["hectares__gte"] = int(hectares_min)
+    except (ValueError, TypeError):
+        pass
+
+    try:
+        if hectares_max is not None and hectares_max != "":
+            filters["hectares__lte"] = int(hectares_max)
+    except (ValueError, TypeError):
+        pass
+
+    if filters:
+        return qs.filter(**filters)
+
+    return qs
+
+
 def _sort_queryset(qs: QuerySet, sort_field: str, direction: str = "asc", allowed_fields: List[str] = None) -> QuerySet:
     """
     Сортування QuerySet за заданим полем.
@@ -556,7 +577,6 @@ def _sort_queryset(qs: QuerySet, sort_field: str, direction: str = "asc", allowe
 
 def _sort_key(c, sort):
     value = getattr(c, sort)
-
     if sort in ["last_call"]:
         return value or datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
     elif sort in ["next_call"]:

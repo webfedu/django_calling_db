@@ -79,14 +79,15 @@
     <input type="text" id="search" name="search" value="{{ search }}"><br><br>
 
     <label>Кількість гектарів:</label><br>
-    <input type="number" name="hectares_val" value="{{ hectares_val }}" step="0.01"><br>
-    <select name="hectares_op">
+    <input type="number" name="hectares_max" value="{{ hectares_max }}" step="1">Max<br>
+    <input type="number" name="hectares_min" value="{{ hectares_min }}" step="1">Min<br>
+    <!-- <select name="hectares_op">
         <option value="">==</option>
         <option value="<" {% if hectares_op == "<" %}selected{% endif %}>&lt;</option>
         <option value=">" {% if hectares_op == ">" %}selected{% endif %}>&gt;</option>
         <option value="<=" {% if hectares_op == "<=" %}selected{% endif %}>&lt;=</option>
         <option value=">=" {% if hectares_op == ">=" %}selected{% endif %}>&gt;=</option>
-    </select><br><br>
+    </select><br><br> -->
 
     <!-- Зберігаємо сортування при сабміті форми -->
     <input type="hidden" name="sort" value="{{ sort }}">
