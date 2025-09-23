@@ -87,7 +87,7 @@ def get_filtered_sorted_companies(
         else:
             qs = quick_search_companies(qs, search)
         
-        qs = _filter_by_hectares_range(qs, hectares_max, hectares_min) # --- Фільтр по гектарах ---
+        qs = _filter_by_hectares_range(qs, hectares_min, hectares_max) # --- Фільтр по гектарах ---
 
         
 
